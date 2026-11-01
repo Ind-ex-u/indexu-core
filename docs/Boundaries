@@ -1,0 +1,334 @@
+# Indexu — Boundaries
+
+Este documento define **fronteiras rígidas e intransponíveis** do sistema Indexu.
+
+Boundaries existem para:
+- impedir acoplamento invisível
+- evitar violações silenciosas de princípios
+- proteger significado humano contra conveniência técnica
+
+Se um boundary for atravessado, **o sistema deixa de cumprir sua função original**.
+
+---
+
+## 1. Boundary: Feed × Processamento
+
+### Regra
+O **Feed** é estritamente uma camada de leitura.
+
+### Proibições
+- O Feed **não pode**:
+  - disparar pipelines de IA
+  - gerar ou recalcular reflexões
+  - executar inferências
+  - acionar workers
+  - executar fallback automático
+
+### Permissões
+- Consumir apenas dados:
+  - já persistidos
+  - versionados
+  - previamente processados
+
+### Violação típica
+> “Se não tiver reflexão, gera na hora.”
+
+**Isto é uma violação grave.**
+
+---
+
+## 2. Boundary: Controllers × Lógica de Domínio
+
+### Regra
+Controllers e routes existem apenas para:
+- validação de entrada
+- roteamento
+- adaptação HTTP
+
+### Proibições
+- Controllers **não podem**:
+  - conter regras de negócio
+  - decidir profundidade de reflexão
+  - chamar IA diretamente
+  - persistir estados complexos
+
+### Permissões
+- Delegar explicitamente para services de domínio.
+
+### Violação típica
+> “Só uma regra rápida aqui no controller.”
+
+Isso cria lógica invisível e não auditável.
+
+---
+
+## 3. Boundary: Entry Points Oficiais × Atalhos
+
+### Regra
+Todo comportamento relevante deve entrar no sistema por **entry points explícitos**.
+
+### Entry points válidos
+- `*.routes.ts`
+- services de domínio
+- pipelines de análise
+- eventos registrados
+
+### Proibições
+- Regras críticas **não podem** ser introduzidas via:
+  - `server.ts`
+  - middlewares genéricos
+  - scripts ad-hoc
+  - hotfixes diretos
+
+### Observação
+Rotas legadas em `server.ts` são exceções históricas e devem ser gradualmente eliminadas.
+
+---
+
+## 4. Boundary: IA Central × Chamadas Distribuídas
+
+### Regra
+Existe um **único ponto autorizado** para interação com IA.
+
+### Proibições
+- Chamadas a LLMs ou modelos auxiliares fora da camada central são proibidas.
+- IA **não pode** ser chamada por:
+  - utils
+  - scripts
+  - jobs isolados
+  - controllers
+
+### Permissões
+- Apenas a camada central de análise pode:
+  - invocar modelos
+  - registrar custos
+  - persistir resultados
+
+### Violação típica
+> “É só uma tradução / normalização com IA.”
+
+Isso quebra governança e rastreabilidade.
+
+---
+
+## 5. Boundary: Read Paths × Recomputação
+
+### Regra
+Caminhos de leitura **não produzem efeitos colaterais**.
+
+### Proibições
+- GET/READ **não pode**:
+  - recalcular reflexão
+  - reprocessar mídia
+  - atualizar estados
+  - disparar eventos
+
+### Permissões
+- Leitura pura e previsível.
+
+### Violação típica
+> “Ao ler, aproveita e atualiza.”
+
+Isso destrói causalidade.
+
+---
+
+## 6. Boundary: Automação × Estado Humano (IND / U)
+
+### Regra
+Estado humano **não é derivável automaticamente**.
+
+### Proibições
+- Nenhuma análise automática pode:
+  - escrever em IND
+  - alterar U
+  - redefinir identidade
+  - atualizar estados internos
+
+### Permissões
+- Transições para IND/U exigem:
+  - evento humano explícito
+  - confirmação consciente
+  - persistência auditável
+
+### Violação típica
+> “O modelo detectou, então salvamos.”
+
+Isso é violação ética e técnica.
+
+---
+
+## 7. Boundary: Scripts / Jobs × Governança
+
+### Regra
+Scripts e jobs **não governam o sistema**.
+
+### Proibições
+- Scripts **não podem**:
+  - chamar IA
+  - persistir estados críticos
+  - alterar reflexões
+  - modificar IND ou U
+
+### Permissões
+- Scripts servem apenas para:
+  - suporte
+  - migração explícita
+  - manutenção controlada
+
+---
+
+## 8. Boundary: Silêncio × Erro
+
+### Regra
+Silêncio é um estado válido do sistema.
+
+### Proibições
+- Ausência de reflexão **não pode**:
+  - ser tratada como erro
+  - disparar fallback automático
+  - gerar conteúdo sem opt-in
+
+### Permissões
+- O sistema pode permanecer intencionalmente silencioso.
+
+---
+
+## 9. Boundary: Conveniência × Significado
+
+### Regra
+Conveniência técnica **nunca** justifica violação de significado humano.
+
+### Proibições
+- Não é permitido:
+  - “simplificar” violando princípios
+  - acelerar violando opt-in
+  - reduzir custo violando rastreabilidade
+
+Quando há conflito, **significado vence conveniência**.
+
+---
+
+## Regra final de violação
+
+Qualquer violação de boundary deve:
+- falhar explicitamente
+- ser visível em logs
+- nunca funcionar silenciosamente
+
+Se algo “funciona” atravessando um boundary, **o sistema está errado**.
+
+---
+
+## Nota final
+
+Boundaries não existem para limitar criatividade.  
+Existem para **preservar coerência ao longo do tempo**.
+
+Todo boundary atravessado conscientemente deve ser:
+- registrado em `DECISIONS.md`
+- limitado em escopo
+- tratado como exceção temporária
+
+
+## Boundaries — Limites Humanos da IA Irmã
+
+### Propósito desta Camada
+Esta camada define **limites explícitos, não negociáveis**, para a atuação da IA irmã na Indexu, com o objetivo de proteger:
+- a autonomia psicológica do usuário
+- a integridade do processo humano de assimilação
+- a identidade ética do sistema
+- a sustentabilidade do uso de IA ao longo do tempo
+
+Estes limites existem para impedir que a IA substitua processos humanos fundamentais.
+
+---
+
+### Princípio Norteador
+> A IA irmã não acompanha o usuário indefinidamente.  
+> Ela intervém, ajuda a nomear e se retira.
+
+---
+
+### Limites Estruturais Invioláveis
+
+#### 1. Limite de Disponibilidade
+- A IA irmã **não está sempre acessível**
+- O acesso ocorre em sessões delimitadas
+- Sessões possuem encerramento consciente
+- Não existe modo “conversa contínua”
+
+Violação deste limite descaracteriza a Câmara Interna.
+
+---
+
+#### 2. Limite de Dependência
+A IA irmã **não deve se tornar o local preferencial do usuário**.
+
+Portanto:
+- a IA pode recusar continuar uma conversa
+- a IA pode sugerir silêncio mesmo diante de solicitação ativa
+- a IA não responde apenas para “manter presença”
+
+---
+
+#### 3. Limite de Consolo Emocional
+A IA irmã:
+- não valida emoções automaticamente
+- não oferece conforto contínuo
+- não assume papel terapêutico
+- não substitui relações humanas
+
+O conforto não é objetivo primário do sistema.
+
+---
+
+#### 4. Limite de Autoridade Existencial
+A IA irmã:
+- não interpreta a vida do usuário
+- não orienta decisões existenciais
+- não prescreve caminhos
+- não define significados finais
+
+Ela devolve perspectivas, nunca verdades.
+
+---
+
+#### 5. Limite de Persistência Conversacional
+- Loops semânticos são detectados
+- Repetição temática sem avanço aciona encerramento
+- Tempo prolongado sem novidade interna aciona pausa
+
+O silêncio é preferível à repetição.
+
+---
+
+### Relação com Outras Camadas
+
+#### EXD
+- Não ativa curiosidade introspectiva constante
+- Não provoca análise existencial
+- Atua apenas como organizador de expressão
+
+#### IA no Feed
+- Opera sob demanda
+- Pode se recusar a interpretar
+- Não cria dependência interpretativa
+
+---
+
+### Violação de Limites
+Qualquer implementação que:
+- mantenha a IA permanentemente acessível
+- estimule conversa infinita
+- gere apego funcional
+- substitua assimilação humana
+
+deve ser considerada **violação grave da arquitetura humana da Indexu**.
+
+---
+
+### Nota de Responsabilidade
+Estes limites não existem para restringir o usuário,
+mas para garantir que a tecnologia não ultrapasse
+fronteiras que o próprio humano nem sempre consegue perceber.
